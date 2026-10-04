@@ -14,6 +14,7 @@ const NAV_ITEMS: Array<{ to: string; key: string; ownerOnly?: boolean }> = [
   { to: '/reports',    key: 'nav_reports' },
   { to: '/users',      key: 'nav_users', ownerOnly: true },
   { to: '/settings',   key: 'nav_settings', ownerOnly: true },
+  { to: '/import', key: 'nav_import', ownerOnly: true },
   { to: '/profile',    key: 'nav_profile' },
 ];
 

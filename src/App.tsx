@@ -15,6 +15,7 @@ import Users from './pages/Users';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import StudentPortal from './pages/StudentPortal';
+import Import from './pages/Import';
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
                 <Route path="/settings"   element={<RequireRole role="owner"><Settings /></RequireRole>} />
                 <Route path="/profile"    element={<Profile />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/import" element={<RequireRole role="owner"><Import /></RequireRole>} />
               </Route>
             </Routes>
           </AuthProvider>

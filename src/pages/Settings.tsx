@@ -6,6 +6,7 @@ import {
   saveSettings, uploadLogo,
   type Settings as SettingsShape, type Language, type PortalInactiveMode,
 } from '../lib/api/settings';
+import { downloadFullBackup, downloadCsvBundle } from '../lib/api/backup';
 
 export default function Settings() {
   const { t, i18n } = useTranslation();
@@ -16,6 +17,8 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [urlInput, setUrlInput] = useState('');
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [csvBusy, setCsvBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -80,6 +83,30 @@ export default function Settings() {
       toast.error((e as Error).message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const onDownloadBackup = async () => {
+    setBackupBusy(true);
+    try {
+      await downloadFullBackup();
+      toast.success(t('settings_backup_done'));
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
+  const onDownloadCsv = async () => {
+    setCsvBusy(true);
+    try {
+      await downloadCsvBundle();
+      toast.success(t('settings_backup_csv_done'));
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setCsvBusy(false);
     }
   };
 
@@ -234,6 +261,44 @@ export default function Settings() {
           >
             {saving ? t('saving') : t('action_save')}
           </button>
+        </div>
+      </div>
+
+      {/* ---- Backup ---- */}
+      <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <h2 className="mb-2 text-sm font-medium text-slate-800">
+          {t('settings_backup_title')}
+        </h2>
+        <p className="mb-4 text-xs text-slate-500">
+          {t('settings_backup_hint')}
+        </p>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={onDownloadBackup}
+            disabled={backupBusy || csvBusy}
+            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+          >
+            {backupBusy ? t('settings_backup_working') : t('settings_backup_download')}
+          </button>
+          <button
+            onClick={onDownloadCsv}
+            disabled={backupBusy || csvBusy}
+            className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900 disabled:opacity-60"
+          >
+            {csvBusy ? t('settings_backup_csv_working') : t('settings_backup_csv_download')}
+          </button>
+        </div>
+
+        <div className="mt-3 space-y-1 text-[11px] text-slate-500">
+          <div>
+            <span className="font-medium text-slate-600">Excel:</span>{' '}
+            {t('settings_backup_format_excel')}
+          </div>
+          <div>
+            <span className="font-medium text-slate-600">CSV:</span>{' '}
+            {t('settings_backup_format_csv')}
+          </div>
         </div>
       </div>
     </div>
