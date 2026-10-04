@@ -1,0 +1,7 @@
+project_id = "student-daily-payment"
+
+[functions.auth-login]
+verify_jwt = false
+
+[functions.auth-logout]
+verify_jwt = false
