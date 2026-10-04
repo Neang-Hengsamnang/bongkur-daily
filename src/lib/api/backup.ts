@@ -202,7 +202,7 @@ function addSheet(
 
   // Style header
   const headerRow = ws.getRow(1);
-  cols.forEach((c, i) => {
+  cols.forEach((_c, i) => {
     const cell = headerRow.getCell(i + 1);
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
