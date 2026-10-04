@@ -158,8 +158,19 @@ export default function NewPaymentTab() {
           />
         </div>
 
-        <div className="text-xs text-slate-500">
-          {t('payments_students_count', { count: filtered.length })}
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-xs text-slate-500">
+            {t('payments_students_count', { count: filtered.length })}
+          </span>
+          <button
+            type="button"
+            onClick={reload}
+            disabled={loading}
+            title={t('action_refresh')}
+            className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            ↻ <span className="hidden sm:inline">{t('action_refresh')}</span>
+          </button>
         </div>
       </div>
 

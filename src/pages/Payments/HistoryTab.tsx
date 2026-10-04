@@ -31,6 +31,7 @@ export default function HistoryTab({ mode }: Props) {
 
   useEffect(() => {
     let cancelled = false;
+    setPage(1);
     (async () => {
       setLoading(true);
       try {
@@ -44,7 +45,6 @@ export default function HistoryTab({ mode }: Props) {
           : data;
         if (!cancelled) {
           setRows(filtered);
-          setPage(1);
         }
       } catch (e) {
         if (!cancelled) toast.error((e as Error).message);
@@ -77,6 +77,11 @@ export default function HistoryTab({ mode }: Props) {
 
   const totalPages = Math.max(1, Math.ceil(searched.length / PAGE_SIZE));
 
+  // If a refresh shrinks the list and the current page no longer exists, go to page 1
+  useEffect(() => {
+    if (page > totalPages) setPage(1);
+  }, [page, totalPages]);
+
   const statusOf = (p: PaymentListItem) =>
     p.is_paid ? 'paid' : p.paid_amount > 0 ? 'partial' : 'unpaid';
 
@@ -104,6 +109,15 @@ export default function HistoryTab({ mode }: Props) {
             <option value="unpaid">{t('payments_status_unpaid')}</option>
           </select>
         )}
+        <button
+          type="button"
+          onClick={reload}
+          disabled={loading}
+          title={t('action_refresh')}
+          className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        >
+          ↻ <span className="hidden sm:inline">{t('action_refresh')}</span>
+        </button>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">

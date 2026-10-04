@@ -397,6 +397,7 @@
   "portal_inactive_banner_dropped": "This student has left the school. History is shown for reference.",
 
   "action_close": "Close",
+  "action_refresh": "Refresh",
 
   "students_bulk_qr": "Bulk QR",
   "students_select_all": "Select all",
