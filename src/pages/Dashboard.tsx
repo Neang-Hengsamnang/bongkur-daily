@@ -101,6 +101,30 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
+        <div>
+          <div className="rounded-xl border border-slate-200 bg-white">
+            <div className="border-b border-slate-100 px-4 py-3">
+              <h2 className="text-sm font-medium text-slate-800">
+                {t('dashboard_quick_actions')}
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 gap-2 p-3">
+              <QuickAction to="/payments" label={t('dashboard_qa_new_payment')} emoji="💵" />
+              <QuickAction to="/students" label={t('dashboard_qa_students')} emoji="🎓" />
+              <QuickAction to="/courses" label={t('dashboard_qa_courses')} emoji="📚" />
+              <QuickAction to="/reports" label={t('dashboard_qa_reports')} emoji="📊" />
+              {isOwner && (
+                <QuickAction
+                  to="/settings"
+                  label={t('dashboard_qa_settings')}
+                  emoji="⚙️"
+                  wide
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="lg:col-span-2">
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
@@ -170,30 +194,6 @@ export default function Dashboard() {
                 })}
               </ul>
             )}
-          </div>
-        </div>
-
-        <div>
-          <div className="rounded-xl border border-slate-200 bg-white">
-            <div className="border-b border-slate-100 px-4 py-3">
-              <h2 className="text-sm font-medium text-slate-800">
-                {t('dashboard_quick_actions')}
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 gap-2 p-3">
-              <QuickAction to="/payments" label={t('dashboard_qa_new_payment')} emoji="💵" />
-              <QuickAction to="/students" label={t('dashboard_qa_students')} emoji="🎓" />
-              <QuickAction to="/courses" label={t('dashboard_qa_courses')} emoji="📚" />
-              <QuickAction to="/reports" label={t('dashboard_qa_reports')} emoji="📊" />
-              {isOwner && (
-                <QuickAction
-                  to="/settings"
-                  label={t('dashboard_qa_settings')}
-                  emoji="⚙️"
-                  wide
-                />
-              )}
-            </div>
           </div>
         </div>
       </div>
