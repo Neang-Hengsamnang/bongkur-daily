@@ -39,6 +39,10 @@
   "action_save": "រក្សាទុក",
   "action_logout": "ចាកចេញ",
 
+  "action_close": "បិទ",
+  "action_refresh": "ផ្ទុកឡើងវិញ",
+  "action_menu": "ម៉ឺនុយ",
+
   "login_subtitle": "សូមចូលដើម្បីបន្ត",
   "login_username": "ឈ្មោះអ្នកប្រើប្រាស់",
   "login_password": "លេខសម្ងាត់",
@@ -105,7 +109,7 @@
   "payments_tab_outstanding": "ជំពាក់",
   "payments_coming_soon": "នឹងមកដល់ក្នុងដំណាក់កាលបន្ទាប់",
 
-  "payments_filter_date": "ថ្ងៃ",
+  "payments_filter_date": "កាលបរិច្ឆេទ",
   "payments_filter_grade": "ថ្នាក់",
   "payments_filter_grade_all": "ថ្នាក់ទាំងអស់",
   "payments_search": "ស្វែងរក",
@@ -113,7 +117,7 @@
   "payments_students_count": "សិស្ស {{count}} នាក់",
   "payments_empty": "គ្មានសិស្សត្រូវនឹងតម្រងទេ",
   "payments_status_paid": "បានបង់",
-  "payments_status_partial": "បង់មួយផ្នែក",
+  "payments_status_partial": "បង់បានខ្លះ",
   "payments_status_unpaid": "មិនបានបង់",
 
   "payments_entry_title": "ការបង់ប្រាក់ថ្មី",
@@ -132,8 +136,8 @@
   "payments_entry_date": "ថ្ងៃបង់ប្រាក់",
   "payments_entry_mode": "របៀបបង់ប្រាក់",
   "payments_entry_mode_full": "បង់ពេញ",
-  "payments_entry_mode_partial": "មួយផ្នែក",
-  "payments_entry_mode_later": "បង់ក្រោយ",
+  "payments_entry_mode_partial": "បង់ខ្លះ",
+  "payments_entry_mode_later": "ជំពាក់សិន",
   "payments_entry_partial_amount": "ចំនួនបង់ឥឡូវ (រៀល)",
   "payments_entry_after_payment": "បន្ទាប់ពីការបង់នេះ នៅសល់ {{amount}}",
   "payments_entry_note": "កំណត់សម្គាល់",
@@ -178,6 +182,10 @@
   "payments_record_save": "រក្សាទុក",
   "payments_record_saved": "បានកត់ត្រាការបង់ប្រាក់",
   "payments_record_error_amount": "សូមបញ្ចូលចំនួនធំជាងសូន្យ",
+  
+  "payments_entry_tap_to_add": "ចុចវគ្គសិក្សាដើម្បីបន្ថែម",
+  "payments_entry_no_courses": "គ្មានវគ្គសិក្សាសកម្មទេ។ សូមបន្ថែមនៅក្នុងទំព័រវគ្គសិក្សា។",
+  "payments_entry_existing_badge": "បានបង់រួចថ្ងៃនេះ",
 
   "dashboard_subtitle": "ស្ថិតិសង្ខេបនៅក្នុងសាលារបស់អ្នក",
   "dashboard_kpi_students": "សិស្សសរុប",
@@ -251,14 +259,14 @@
   "reports_all": "ទាំងអស់",
   "reports_preset_today": "ថ្ងៃនេះ",
   "reports_preset_week": "៧ ថ្ងៃ",
-  "reports_preset_month": "ខែ",
-  "reports_preset_year": "ឆ្នាំ",
+  "reports_preset_month": "ខែនេះ",
+  "reports_preset_year": "ឆ្នាំនេះ",
 
   "reports_kpi_billed": "សរុបត្រូវបង់",
   "reports_kpi_paid": "សរុបបានបង់",
   "reports_kpi_outstanding": "ជំពាក់",
   "reports_kpi_transactions": "ប្រតិបត្តិការ",
-  "reports_kpi_students": "សិស្សបានបម្រើ",
+  "reports_kpi_students": "សិស្សមានកំណត់ត្រា",
 
   "reports_chart_daily": "ចំណូលប្រចាំថ្ងៃ",
   "reports_chart_no_data": "គ្មានទិន្នន័យក្នុងរយៈពេលនេះ",
@@ -394,9 +402,6 @@
   "portal_inactive_banner_inactive": "សិស្សនេះកំពុងផ្អាកការសិក្សា។ ប្រវត្តិត្រូវបានបង្ហាញសម្រាប់យោង។",
   "portal_inactive_banner_graduated": "សិស្សនេះបានបញ្ចប់ការសិក្សា។ ប្រវត្តិត្រូវបានបង្ហាញសម្រាប់យោង។",
   "portal_inactive_banner_dropped": "សិស្សនេះបានចាកចេញពីសាលា។ ប្រវត្តិត្រូវបានបង្ហាញសម្រាប់យោង។",
-
-  "action_close": "បិទ",
-  "action_refresh": "ផ្ទុកឡើងវិញ",
 
   "students_bulk_qr": "QR ជាក្រុម",
   "students_select_all": "ជ្រើសទាំងអស់",
