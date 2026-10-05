@@ -232,24 +232,25 @@ export default function NewPaymentTab() {
                 {hasRecord && payment && (
                   <>
                     <div className="mt-2 text-sm font-semibold text-emerald-800 tabular-nums">
-                      {riel(payment.total_amount)}
-                    </div>
-                    <span
-                      className={
-                        'mt-1 inline-block self-start rounded-full px-1.5 py-0.5 text-[10px] ' +
-                        (paid
-                          ? 'bg-emerald-200 text-emerald-900'
+                      {riel(payment.total_amount)} &nbsp;&nbsp;
+                        <span
+                        className={
+                          'mt-1 inline-block self-start rounded-full px-1.5 py-0.5 text-[10px] ' +
+                          (paid
+                            ? 'bg-emerald-200 text-emerald-900'
+                            : partial
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-200 text-slate-700')
+                        }
+                      >
+                        {paid
+                          ? t('payments_status_paid')
                           : partial
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-slate-200 text-slate-700')
-                      }
-                    >
-                      {paid
-                        ? t('payments_status_paid')
-                        : partial
-                          ? t('payments_status_partial')
-                          : t('payments_status_unpaid')}
-                    </span>
+                            ? t('payments_status_partial')
+                            : t('payments_status_unpaid')}
+                      </span>
+                    </div>
+                    
                   </>
                 )}
 
