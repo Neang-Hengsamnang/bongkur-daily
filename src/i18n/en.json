@@ -46,10 +46,11 @@
   "login_subtitle": "Sign in to continue",
   "login_username": "Username",
   "login_password": "Password",
-  "login_remember": "Remember me for 30 days",
+  "login_remember": "Keep me signed in",
   "login_submit": "Sign in",
   "login_failed": "Invalid username or password.",
   "login_locked": "Too many failed attempts. Try again in 15 minutes.",
+  "login_remember_hint": "Stay signed in on this device until you log out.",
 
   "courses_title": "Courses",
   "courses_add": "Add Course",

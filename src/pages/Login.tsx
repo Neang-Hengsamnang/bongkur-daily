@@ -122,6 +122,11 @@ export default function Login() {
             />
             {t('login_remember')}
           </label>
+          {remember && (
+            <p className="mt-1 pl-6 text-[10px] text-slate-400">
+              {t('login_remember_hint')}
+            </p>
+          )}
 
           {error && (
             <div className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
