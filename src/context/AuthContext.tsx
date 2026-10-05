@@ -27,7 +27,13 @@ const Ctx = createContext<AuthCtx | null>(null);
 function decodeJwt(token: string): Record<string, unknown> {
   try {
     const payload = token.split('.')[1];
-    const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const json = new TextDecoder('utf-8').decode(bytes);
     return JSON.parse(json);
   } catch {
     return {};
