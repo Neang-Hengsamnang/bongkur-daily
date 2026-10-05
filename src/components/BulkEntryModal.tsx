@@ -75,19 +75,29 @@ export default function BulkEntryModal({
 
   const grandTotal = perStudentTotal * students.length;
 
-  const addRow = () => {
-    const used = new Set(items.map((i) => i.course_id));
-    const next = activeCourses.find((c) => !used.has(c.course_id)) ?? activeCourses[0];
-    if (!next) return;
-    setItems((prev) => [...prev, { key: nextKey(), course_id: next.course_id, hours: 1 }]);
+  const addCourse = (courseId: string) => {
+    setItems((prev) => [...prev, { key: nextKey(), course_id: courseId, hours: 1 }]);
   };
 
-  const updateRow = (key: string, patch: Partial<DraftItem>) => {
-    setItems((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  const incrementCourse = (courseId: string) => {
+    setItems((prev) =>
+      prev.map((i) => (i.course_id === courseId ? { ...i, hours: i.hours + 1 } : i)),
+    );
   };
 
-  const removeRow = (key: string) => {
-    setItems((prev) => prev.filter((r) => r.key !== key));
+  const decrementCourse = (courseId: string) => {
+    setItems((prev) => {
+      const next: DraftItem[] = [];
+      for (const i of prev) {
+        if (i.course_id !== courseId) {
+          next.push(i);
+        } else if (i.hours > 1) {
+          next.push({ ...i, hours: i.hours - 1 });
+        }
+        // hours === 1 → drop the item
+      }
+      return next;
+    });
   };
 
   const onSave = async () => {
@@ -130,19 +140,20 @@ export default function BulkEntryModal({
       onClose={() => { if (!saving) onClose(); }}
       title={t('payments_bulk_title')}
       maxWidth="max-w-2xl"
+      mobileSheet
       footer={
         <>
           <button
             onClick={onClose}
             disabled={saving}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
           >
             {t('action_cancel')}
           </button>
           <button
             onClick={onSave}
             disabled={saving || students.length === 0}
-            className="rounded-md bg-brand-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+            className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
           >
             {saving ? t('saving') : t('payments_bulk_save', { count: students.length })}
           </button>
@@ -150,11 +161,13 @@ export default function BulkEntryModal({
       }
     >
       <div className="space-y-4">
+        {/* Subtitle */}
         <p className="text-sm text-slate-600">
           {t('payments_bulk_subtitle', { count: students.length })}
         </p>
 
-        <div className="flex flex-wrap gap-1.5 rounded-md border border-slate-200 bg-slate-50 p-2">
+        {/* Student chips */}
+        <div className="flex max-h-24 flex-wrap gap-1.5 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-2">
           {students.map((s) => (
             <span
               key={s.student_id}
@@ -166,108 +179,108 @@ export default function BulkEntryModal({
           ))}
         </div>
 
+        {/* Course cards */}
         <div>
-          <div className="mb-1 flex items-center justify-between">
+          <div className="mb-2 flex items-center justify-between">
             <label className="text-xs font-medium text-slate-600">
               {t('payments_entry_new_items_title')}
             </label>
-            <button
-              type="button"
-              onClick={addRow}
-              disabled={activeCourses.length === 0}
-              className="rounded-md border border-slate-200 px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-50"
-            >
-              + {t('payments_entry_add_course')}
-            </button>
+            <span className="text-[10px] text-slate-400">
+              {t('payments_entry_tap_to_add')}
+            </span>
           </div>
 
-          <div className="overflow-hidden rounded-md border border-slate-200">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="px-3 py-1.5">{t('payments_entry_col_course')}</th>
-                  <th className="w-20 px-2 py-1.5 text-right">{t('payments_entry_col_hours')}</th>
-                  <th className="w-28 px-2 py-1.5 text-right">{t('payments_entry_col_fee')}</th>
-                  <th className="w-28 px-2 py-1.5 text-right">{t('payments_entry_col_subtotal')}</th>
-                  <th className="w-10 px-2 py-1.5" />
-                </tr>
-              </thead>
-              <tbody>
-                {items.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-3 py-4 text-center text-xs text-slate-500">
-                      {t('payments_entry_no_items')}
-                    </td>
-                  </tr>
-                ) : items.map((row) => {
-                  const course = courseMap.get(row.course_id);
-                  const subtotal = course ? course.hourly_fee * (row.hours || 0) : 0;
-                  return (
-                    <tr key={row.key} className="border-t border-slate-100">
-                      <td className="px-3 py-1.5">
-                        <select
-                          value={row.course_id}
-                          onChange={(e) => updateRow(row.key, { course_id: e.target.value })}
-                          className="w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
-                        >
-                          {activeCourses.map((c) => (
-                            <option key={c.course_id} value={c.course_id}>
-                              {c.name_kh}{c.name_en ? ` (${c.name_en})` : ''}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-2 py-1.5">
-                        <input
-                          type="number"
-                          min={1}
-                          step={1}
-                          value={row.hours}
-                          onChange={(e) =>
-                            updateRow(row.key, { hours: Number(e.target.value) })
-                          }
-                          className="w-full rounded-md border border-slate-200 px-2 py-1 text-right text-sm tabular-nums"
-                        />
-                      </td>
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-500 tabular-nums">
-                        {course ? riel(course.hourly_fee) : '—'}
-                      </td>
-                      <td className="px-2 py-1.5 text-right text-sm tabular-nums">
-                        {riel(subtotal)}
-                      </td>
-                      <td className="px-2 py-1.5 text-right">
-                        <button
-                          type="button"
-                          onClick={() => removeRow(row.key)}
-                          className="text-slate-400 hover:text-red-600"
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          {activeCourses.length === 0 ? (
+            <div className="rounded-md border border-dashed border-slate-200 p-6 text-center text-xs text-slate-500">
+              {t('payments_entry_no_courses')}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              {activeCourses.map((c) => {
+                const draftItem = items.find((i) => i.course_id === c.course_id);
+                const isSelected = Boolean(draftItem);
+                const newHours = draftItem?.hours ?? 0;
+                const newSubtotal = c.hourly_fee * newHours;
 
+                return (
+                  <div
+                    key={c.course_id}
+                    onClick={() => { if (!isSelected) addCourse(c.course_id); }}
+                    className={
+                      'relative flex min-h-[124px] flex-col rounded-lg border p-3 transition select-none ' +
+                      (isSelected
+                        ? 'border-emerald-300 bg-emerald-50'
+                        : 'cursor-pointer border-slate-200 bg-white hover:border-brand-500 hover:shadow-sm active:scale-[0.98]')
+                    }
+                  >
+                    {/* Course name */}
+                    <div className="mb-1.5 pb-0.5 text-sm leading-relaxed text-slate-800 line-clamp-2">
+                      {c.name_kh}
+                    </div>
+
+                    {!isSelected ? (
+                      <div className="mt-auto text-[11px] text-slate-500 tabular-nums">
+                        {riel(c.hourly_fee)}/h
+                      </div>
+                    ) : (
+                      <div className="mt-auto space-y-1.5">
+                        {/* Hours stepper */}
+                        <div
+                          className="flex items-center justify-between gap-1 rounded-md border border-emerald-200 bg-white p-0.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => decrementCourse(c.course_id)}
+                            className="flex h-7 w-7 items-center justify-center rounded text-base font-semibold text-slate-600 hover:bg-slate-100"
+                            aria-label={t('payments_entry_col_hours')}
+                          >
+                            −
+                          </button>
+                          <span className="min-w-[2ch] text-center text-sm font-semibold tabular-nums text-slate-800">
+                            {newHours}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => incrementCourse(c.course_id)}
+                            className="flex h-7 w-7 items-center justify-center rounded text-base font-semibold text-slate-600 hover:bg-slate-100"
+                            aria-label={t('payments_entry_col_hours')}
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {/* Subtotal for one student */}
+                        <div className="text-right text-[11px] font-semibold text-emerald-800 tabular-nums">
+                          {riel(newSubtotal)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Totals banner */}
           <div className="mt-3 flex items-center justify-between rounded-md bg-gradient-to-r from-brand-500 to-brand-700 px-4 py-2.5 text-white">
             <div>
-              <div className="text-xs uppercase tracking-wide opacity-90">
+              <div className="text-[10px] uppercase tracking-wide opacity-90">
                 {t('payments_bulk_per_student')}
               </div>
-              <div className="text-xs opacity-80">
+              <div className="text-[10px] opacity-75">
                 {t('payments_bulk_grand_total', { count: students.length })}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-lg font-semibold tabular-nums">{riel(perStudentTotal)}</div>
+              <div className="text-base font-semibold tabular-nums">{riel(perStudentTotal)}</div>
               <div className="text-xs opacity-90 tabular-nums">{riel(grandTotal)}</div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        {/* Date + Mode */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">
               {t('payments_entry_date')}
@@ -292,7 +305,7 @@ export default function BulkEntryModal({
                   type="button"
                   onClick={() => setMode(m)}
                   className={
-                    'flex-1 rounded px-2 py-1 text-xs font-medium ' +
+                    'flex flex-1 items-center justify-center rounded px-2 py-1.5 text-center text-xs font-medium leading-tight ' +
                     (mode === m
                       ? 'bg-white text-brand-700 shadow-sm'
                       : 'text-slate-500 hover:text-slate-700')
@@ -305,6 +318,7 @@ export default function BulkEntryModal({
           </div>
         </div>
 
+        {/* Note */}
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">
             {t('payments_entry_note')}
