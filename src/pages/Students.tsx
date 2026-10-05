@@ -196,13 +196,15 @@ export default function Students() {
           <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
             <tr>
               <th className="w-8 px-3 py-2">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={toggleAll}
-                  className="h-4 w-4 cursor-pointer accent-brand-500"
-                  aria-label={t('students_select_all')}
-                />
+                <label className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-md hover:bg-slate-100">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleAll}
+                    className="h-5 w-5 cursor-pointer accent-brand-500"
+                    aria-label={t('students_select_all')}
+                  />
+                </label>
               </th>
               <th className="px-3 py-2">{t('students_col_id')}</th>
               <th className="px-3 py-2">{t('students_col_name_kh')}</th>
@@ -239,12 +241,15 @@ export default function Students() {
                   }
                 >
                   <td className="px-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={isSel}
-                      onChange={() => toggleSelect(s.student_id)}
-                      className="h-4 w-4 cursor-pointer accent-brand-500"
-                    />
+                    <label className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-md hover:bg-slate-100">
+                      <input
+                        type="checkbox"
+                        checked={isSel}
+                        onChange={() => toggleSelect(s.student_id)}
+                        className="h-5 w-5 cursor-pointer accent-brand-500"
+                        aria-label={t('students_select_all')}
+                      />
+                    </label>
                   </td>
                   <td className="px-3 py-2 font-mono text-xs text-slate-500">{s.student_id}</td>
                   <td className="px-3 py-2">{s.name_kh}</td>

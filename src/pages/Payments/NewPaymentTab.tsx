@@ -210,14 +210,18 @@ export default function NewPaymentTab() {
                       : 'border-slate-200 bg-white hover:border-brand-500 hover:shadow-sm')
                 }
               >
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => toggleSelect(st.student_id)}
+                <label
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute right-2 top-2 h-4 w-4 cursor-pointer rounded border-slate-300 accent-brand-500"
-                  aria-label={t('payments_bulk_select')}
-                />
+                  className="absolute right-1 top-1 flex h-11 w-11 cursor-pointer items-center justify-center rounded-md transition hover:bg-white/60 active:scale-95"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleSelect(st.student_id)}
+                    className="h-5 w-5 cursor-pointer rounded border-slate-300 accent-brand-500"
+                    aria-label={t('payments_bulk_select')}
+                  />
+                </label>
 
                 <div className="flex items-start justify-between gap-1 pr-5">
                   <span className="text-sm font-medium text-slate-900 line-clamp-2">
