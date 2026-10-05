@@ -202,7 +202,7 @@ export default function PaymentEntryModal({
             </div>
             <ul className="mt-2 space-y-0.5 text-xs text-emerald-900">
               {existing.payment_items.map((it) => (
-                <li key={it.item_id} className="flex justify-between gap-2">
+                <li key={it.item_id} className="flex justify-between gap-2 leading-relaxed">
                   <span className="truncate">
                     {it.course_name_at_time} · {it.hours}h × {riel(it.hourly_fee_at_time)}
                   </span>
@@ -242,7 +242,7 @@ export default function PaymentEntryModal({
                     key={c.course_id}
                     onClick={() => { if (!isSelected) addCourse(c.course_id); }}
                     className={
-                      'relative flex min-h-[104px] flex-col rounded-lg border p-2.5 transition select-none ' +
+                      'relative flex min-h-[124px] flex-col rounded-lg border p-3 transition select-none ' +
                       (isSelected
                         ? 'border-emerald-300 bg-emerald-50'
                         : 'cursor-pointer border-slate-200 bg-white hover:border-brand-500 hover:shadow-sm active:scale-[0.98]')
@@ -263,7 +263,7 @@ export default function PaymentEntryModal({
                     )}
 
                     {/* Course name */}
-                    <div className="mb-2 pr-11 text-xs font-medium leading-snug text-slate-800 line-clamp-2">
+                    <div className="mb-1.5 pb-0.5 pr-11 text-sm leading-relaxed text-slate-800 line-clamp-2">
                       {c.name_kh}
                     </div>
 
