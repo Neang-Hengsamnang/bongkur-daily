@@ -29,16 +29,34 @@ export interface StudentInput {
 export async function listStudents(
   opts: { search?: string; course?: string; status?: StudentStatus | 'all' } = {},
 ): Promise<Student[]> {
-  let q = supabase.from('students').select('*').order('name_kh', { ascending: true });
-  if (opts.status && opts.status !== 'all') q = q.eq('status', opts.status);
-  if (opts.course) q = q.eq('course', opts.course);
-  const s = opts.search?.trim();
-  if (s) {
-    q = q.or(`name_kh.ilike.%${s}%,student_id.ilike.%${s}%,grade.ilike.%${s}%`);
+  const PAGE = 1000;
+  let offset = 0;
+  const out: Student[] = [];
+
+  while (true) {
+    let q = supabase
+      .from('students')
+      .select('*')
+      .order('name_kh', { ascending: true })
+      .range(offset, offset + PAGE - 1);
+
+    if (opts.status && opts.status !== 'all') q = q.eq('status', opts.status);
+    if (opts.course) q = q.eq('course', opts.course);
+
+    const s = opts.search?.trim();
+    if (s) {
+      q = q.or(`name_kh.ilike.%${s}%,student_id.ilike.%${s}%,grade.ilike.%${s}%`);
+    }
+
+    const { data, error } = await q;
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    out.push(...(data as Student[]));
+    if (data.length < PAGE) break;
+    offset += PAGE;
   }
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data ?? []) as Student[];
+  return out;
 }
 
 export async function createStudent(

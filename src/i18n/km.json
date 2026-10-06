@@ -264,6 +264,10 @@
   "attendance_col_unpaid": "មិនបានបង់",
   "attendance_legend_sunday": "ថ្ងៃអាទិត្យ (គ្មានថ្នាក់)",
 
+  "attendance_legend_pre_enrollment": "មិនទាន់បានចុះឈ្មោះ",
+  "attendance_not_enrolled": "សិស្សនេះមិនទាន់បានចុះឈ្មោះនៅឡើយ",
+  "attendance_legend_pre_enrollment_sunday": "មិនទាន់បានចុះឈ្មោះ · ថ្ងៃអាទិត្យ",
+
   "reports_title": "របាយការណ៍",
   "reports_tab_overview": "ទិដ្ឋភាពទូទៅ",
   "reports_tab_course": "តាមវគ្គសិក្សា",

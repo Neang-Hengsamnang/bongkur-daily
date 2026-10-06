@@ -16,9 +16,8 @@ import type { PaymentListItem } from '../lib/api/payments';
 const STICKY_ID_W = 76;
 const STICKY_NAME_W = 160;
 
-// Excel ARGB fills for Sunday columns
-const SUNDAY_HEADER_FILL = 'FFF43F5E'; // rose-500
-const SUNDAY_DATA_FILL   = 'FFFFF1F2'; // rose-50
+const SUNDAY_HEADER_FILL = 'FFF43F5E';
+const SUNDAY_DATA_FILL   = 'FFFFF1F2';
 
 export default function Attendance() {
   const { t } = useTranslation();
@@ -86,7 +85,6 @@ export default function Attendance() {
     return Array.from(s).sort();
   }, [allStudents]);
 
-  /** Array indexed by day-1: true if that day is a Sunday */
   const dayIsSunday = useMemo(() => {
     if (!data) return [];
     return Array.from({ length: data.daysInMonth }, (_, i) =>
@@ -97,6 +95,7 @@ export default function Attendance() {
   const reload = () => setReloadKey((k) => k + 1);
 
   const onCellClick = (row: MonthlyRow, cell: MonthlyCell) => {
+    if (cell.isPreEnrollment) return;
     if (!cell.payment) {
       if (cell.isFuture || !data) return;
       setEntryStudent(row.student);
@@ -114,11 +113,16 @@ export default function Attendance() {
   };
 
   const cellClass = (cell: MonthlyCell, isSunday: boolean): string => {
-    // Payment cells keep their color regardless of weekday
     if (cell.payment) {
       if (cell.payment.is_paid) return 'bg-emerald-200 text-emerald-900 hover:bg-emerald-300';
       if (cell.payment.paid_amount > 0) return 'bg-amber-200 text-amber-900 hover:bg-amber-300';
       return 'bg-slate-200 text-slate-800 hover:bg-slate-300';
+    }
+    if (cell.isPreEnrollment) {
+      // Keep Sunday columns visually distinct even for days the student wasn't enrolled yet.
+      return isSunday
+        ? 'bg-rose-100 text-rose-200'
+        : 'bg-slate-100 text-slate-300';
     }
     if (cell.isFuture) {
       return isSunday ? 'bg-rose-50 text-rose-200' : 'bg-slate-50 text-slate-200';
@@ -174,7 +178,9 @@ export default function Attendance() {
           paid: r.totalPaid,
           unpaid: 0,
         };
-        for (const c of r.cells) row[`d${c.day}`] = c.payment ? '✓' : null;
+        for (const c of r.cells) {
+          row[`d${c.day}`] = c.payment ? '✓' : null;
+        }
         return row;
       });
 
@@ -199,7 +205,7 @@ export default function Attendance() {
         subtitle:
           `${t('attendance_month')}: ${month} · ` +
           `${t('attendance_kpi_present')}: ${data.totalPresentDays} / ` +
-          `${data.totalStudents * data.daysElapsed} (${data.rate}%) · ` +
+          `${data.possibleDays} (${data.rate}%) · ` +
           `${t('attendance_col_paid_amount')}: ${riel(data.grandPaid)}`,
         columns,
         rows: exportRows,
@@ -339,28 +345,16 @@ export default function Attendance() {
                     </th>
                   );
                 })}
-                <th
-                  className="border-b border-l border-slate-200 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-600"
-                  style={{ width: 56, minWidth: 56 }}
-                >
+                <th className="border-b border-l border-slate-200 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-600" style={{ width: 56, minWidth: 56 }}>
                   {t('attendance_col_total')}
                 </th>
-                <th
-                  className="border-b border-l border-slate-200 bg-slate-100 px-2 py-2 text-right font-semibold text-slate-600"
-                  style={{ width: 110, minWidth: 110 }}
-                >
+                <th className="border-b border-l border-slate-200 bg-slate-100 px-2 py-2 text-right font-semibold text-slate-600" style={{ width: 110, minWidth: 110 }}>
                   {t('attendance_col_billed')}
                 </th>
-                <th
-                  className="border-b border-slate-200 bg-slate-100 px-2 py-2 text-right font-semibold text-slate-600"
-                  style={{ width: 110, minWidth: 110 }}
-                >
+                <th className="border-b border-slate-200 bg-slate-100 px-2 py-2 text-right font-semibold text-slate-600" style={{ width: 110, minWidth: 110 }}>
                   {t('attendance_col_paid_amount')}
                 </th>
-                <th
-                  className="border-b border-slate-200 bg-slate-100 px-2 py-2 text-right font-semibold text-slate-600"
-                  style={{ width: 110, minWidth: 110 }}
-                >
+                <th className="border-b border-slate-200 bg-slate-100 px-2 py-2 text-right font-semibold text-slate-600" style={{ width: 110, minWidth: 110 }}>
                   {t('attendance_col_unpaid')}
                 </th>
               </tr>
@@ -387,22 +381,25 @@ export default function Attendance() {
                   </td>
                   {r.cells.map((c) => {
                     const isSun = dayIsSunday[c.day - 1];
+                    const notClickable = c.isFuture || c.isPreEnrollment;
                     return (
                       <td
                         key={c.day}
                         onClick={() => onCellClick(r, c)}
                         className={
                           'border-b border-slate-100 text-center select-none ' +
-                          (c.isFuture ? 'cursor-default ' : 'cursor-pointer ') +
+                          (notClickable ? 'cursor-default ' : 'cursor-pointer ') +
                           cellClass(c, isSun) +
                           (c.isToday ? ' ring-1 ring-inset ring-brand-500' : '')
                         }
                         title={
-                          c.payment
-                            ? `${r.student.name_kh} · ${c.day}: ✓`
-                            : c.isFuture
-                              ? ''
-                              : t('attendance_click_to_record')
+                          c.isPreEnrollment
+                            ? t('attendance_not_enrolled')
+                            : c.payment
+                              ? `${r.student.name_kh} · ${c.day}: ✓`
+                              : c.isFuture
+                                ? ''
+                                : t('attendance_click_to_record')
                         }
                       >
                         {c.payment ? '✓' : ''}
@@ -417,30 +414,13 @@ export default function Attendance() {
                   >
                     {r.presentDays}
                   </td>
-                  <td
-                    className={
-                      'border-b border-l border-slate-100 px-2 py-1.5 text-right tabular-nums text-slate-700 ' +
-                      (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50')
-                    }
-                  >
+                  <td className={'border-b border-l border-slate-100 px-2 py-1.5 text-right tabular-nums text-slate-700 ' + (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50')}>
                     {riel(r.totalBilled)}
                   </td>
-                  <td
-                    className={
-                      'border-b border-slate-100 px-2 py-1.5 text-right tabular-nums text-emerald-800 ' +
-                      (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50')
-                    }
-                  >
+                  <td className={'border-b border-slate-100 px-2 py-1.5 text-right tabular-nums text-emerald-800 ' + (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50')}>
                     {riel(r.totalPaid)}
                   </td>
-                  <td
-                    className={
-                      'border-b border-slate-100 px-2 py-1.5 text-right tabular-nums ' +
-                      (r.totalRemaining > 0 ? 'text-rose-700' : 'text-slate-400') +
-                      ' ' +
-                      (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50')
-                    }
-                  >
+                  <td className={'border-b border-slate-100 px-2 py-1.5 text-right tabular-nums ' + (r.totalRemaining > 0 ? 'text-rose-700' : 'text-slate-400') + ' ' + (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50')}>
                     {riel(r.totalRemaining)}
                   </td>
                 </tr>
@@ -451,14 +431,9 @@ export default function Attendance() {
                 <td className="sticky left-0 z-30 border-t-2 border-slate-300 bg-slate-100 px-2 py-1.5 text-[10px] font-semibold uppercase text-slate-600">
                   {t('attendance_csv_totals')}
                 </td>
-                <td
-                  className="sticky z-30 border-l border-t-2 border-slate-300 bg-slate-100"
-                  style={{ left: STICKY_ID_W }}
-                />
+                <td className="sticky z-30 border-l border-t-2 border-slate-300 bg-slate-100" style={{ left: STICKY_ID_W }} />
                 {Array.from({ length: data.daysInMonth }, (_, i) => i + 1).map((d) => {
-                  const count = data.rows.filter(
-                    (r) => r.cells[d - 1]?.payment,
-                  ).length;
+                  const count = data.rows.filter((r) => r.cells[d - 1]?.payment).length;
                   const isSun = dayIsSunday[d - 1];
                   return (
                     <td
@@ -517,14 +492,10 @@ export default function Attendance() {
   );
 }
 
-function KpiCard({
-  label, value, accent,
-}: { label: string; value: string; accent: string }) {
+function KpiCard({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
     <div className={`rounded-xl bg-gradient-to-br ${accent} p-3 text-white shadow-sm`}>
-      <div className="text-[10px] font-medium uppercase tracking-wide opacity-90">
-        {label}
-      </div>
+      <div className="text-[10px] font-medium uppercase tracking-wide opacity-90">{label}</div>
       <div className="mt-1 text-2xl font-semibold tabular-nums">{value}</div>
     </div>
   );
@@ -538,6 +509,8 @@ function Legend() {
     { cls: 'bg-slate-200',   label: t('attendance_legend_unpaid') },
     { cls: 'bg-white border border-slate-200', label: t('attendance_legend_absent') },
     { cls: 'bg-slate-50 border border-slate-200', label: t('attendance_legend_future') },
+    { cls: 'bg-slate-100 border border-slate-200', label: t('attendance_legend_pre_enrollment') },
+    { cls: 'bg-rose-100 border border-rose-200', label: t('attendance_legend_pre_enrollment_sunday') },
     { cls: 'bg-rose-100 border border-rose-200', label: t('attendance_legend_sunday') },
   ];
   return (

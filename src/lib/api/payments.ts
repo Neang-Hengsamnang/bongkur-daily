@@ -42,12 +42,26 @@ export function todayIso(): string {
 }
 
 export async function listPaymentsForDate(date: string): Promise<PaymentWithItems[]> {
-  const { data, error } = await supabase
-    .from('payments')
-    .select('*, payment_items(*)')
-    .eq('payment_date', date);
-  if (error) throw error;
-  return (data ?? []) as PaymentWithItems[];
+  const PAGE = 1000;
+  let offset = 0;
+  const out: PaymentWithItems[] = [];
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*, payment_items(*)')
+      .eq('payment_date', date)
+      .order('payment_id', { ascending: true })
+      .range(offset, offset + PAGE - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    out.push(...(data as PaymentWithItems[]));
+    if (data.length < PAGE) break;
+    offset += PAGE;
+  }
+  return out;
 }
 
 export async function upsertPayment(params: {
@@ -101,25 +115,38 @@ export async function listPaymentsHistory(opts: {
   from?: string;
   to?: string;
 } = {}): Promise<PaymentListItem[]> {
-  let q = supabase
-    .from('payments')
-    .select('*, students(name_kh, grade), payment_items(*), profiles(full_name)')
-    .order('created_at', { ascending: false });
+  const PAGE = 1000;
+  let offset = 0;
+  const out: PaymentListItem[] = [];
 
-  if (opts.from) q = q.gte('payment_date', opts.from);
-  if (opts.to) q = q.lte('payment_date', opts.to);
+  while (true) {
+    let q = supabase
+      .from('payments')
+      .select('*, students(name_kh, grade), payment_items(*), profiles(full_name)')
+      .order('created_at', { ascending: false })
+      .order('payment_id', { ascending: false })
+      .range(offset, offset + PAGE - 1);
 
-  if (opts.status === 'paid') {
-    q = q.eq('is_paid', true);
-  } else if (opts.status === 'unpaid') {
-    q = q.eq('is_paid', false).eq('paid_amount', 0);
-  } else if (opts.status === 'partial') {
-    q = q.eq('is_paid', false).gt('paid_amount', 0);
+    if (opts.from) q = q.gte('payment_date', opts.from);
+    if (opts.to)   q = q.lte('payment_date', opts.to);
+
+    if (opts.status === 'paid') {
+      q = q.eq('is_paid', true);
+    } else if (opts.status === 'unpaid') {
+      q = q.eq('is_paid', false).eq('paid_amount', 0);
+    } else if (opts.status === 'partial') {
+      q = q.eq('is_paid', false).gt('paid_amount', 0);
+    }
+
+    const { data, error } = await q;
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    out.push(...(data as PaymentListItem[]));
+    if (data.length < PAGE) break;
+    offset += PAGE;
   }
-
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data ?? []) as PaymentListItem[];
+  return out;
 }
 
 export async function markPaymentPaid(payment_id: string, amount: number): Promise<void> {
@@ -142,14 +169,28 @@ export async function countOutstanding(): Promise<number> {
 export async function listPaymentsInRange(
   from: string, to: string,
 ): Promise<PaymentWithItems[]> {
-  const { data, error } = await supabase
-    .from('payments')
-    .select('*, payment_items(*)')
-    .gte('payment_date', from)
-    .lte('payment_date', to)
-    .order('payment_date', { ascending: true });
-  if (error) throw error;
-  return (data ?? []) as PaymentWithItems[];
+  const PAGE = 1000;
+  let offset = 0;
+  const out: PaymentWithItems[] = [];
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*, payment_items(*)')
+      .gte('payment_date', from)
+      .lte('payment_date', to)
+      .order('payment_date', { ascending: true })
+      .order('payment_id',   { ascending: true })
+      .range(offset, offset + PAGE - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    out.push(...(data as PaymentWithItems[]));
+    if (data.length < PAGE) break;
+    offset += PAGE;
+  }
+  return out;
 }
 
 export async function replacePaymentItems(params: {

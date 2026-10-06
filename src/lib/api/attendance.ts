@@ -5,6 +5,7 @@ export interface MonthlyCell {
   day: number;
   isFuture: boolean;
   isToday: boolean;
+  isPreEnrollment: boolean;
   payment: PaymentWithItems | null;
 }
 
@@ -12,6 +13,7 @@ export interface MonthlyRow {
   student: Student;
   cells: MonthlyCell[];
   presentDays: number;
+  possibleDays: number;
   totalBilled: number;
   totalPaid: number;
   totalRemaining: number;
@@ -26,6 +28,7 @@ export interface MonthlyResult {
   totalStudents: number;
   totalPresentDays: number;
   totalAbsentDays: number;
+  possibleDays: number;
   rate: number;
   grandBilled: number;
   grandPaid: number;
@@ -73,9 +76,18 @@ export async function getMonthlyAttendance(opts: {
     listPaymentsInRange(from, to),
   ]);
 
+  // Exclude students created AFTER this month ends — they weren't enrolled.
+  // monthEnd is the last millisecond of the queried month.
+  const monthEndMs = new Date(year, month, 0, 23, 59, 59, 999).getTime();
+
+  const enrolledStudents = students.filter((s) => {
+    const createdMs = new Date(s.created_at).getTime();
+    return Number.isFinite(createdMs) && createdMs <= monthEndMs;
+  });
+
   const filtered = opts.grade
-    ? students.filter((s) => s.grade === opts.grade)
-    : students;
+    ? enrolledStudents.filter((s) => s.grade === opts.grade)
+    : enrolledStudents;
 
   const byStudentDay = new Map<string, Map<number, PaymentWithItems>>();
   for (const p of payments) {
@@ -89,23 +101,45 @@ export async function getMonthlyAttendance(opts: {
     const inner = byStudentDay.get(s.student_id) ?? new Map<number, PaymentWithItems>();
     const cells: MonthlyCell[] = [];
     let presentDays = 0;
+    let possibleDays = 0;
     let totalBilled = 0;
     let totalPaid = 0;
+
+    // Compute the effective start day of this student within the queried month.
+    // If they were created before the month → start = 1.
+    // If created inside the month → start = the day they joined.
+    const created = new Date(s.created_at);
+    const createdY = created.getFullYear();
+    const createdM = created.getMonth() + 1;
+    let effectiveStart = 1;
+    if (createdY === year && createdM === month) {
+      effectiveStart = created.getDate();
+    }
+    // (If created > queried month, we already filtered them out.)
+
     for (let d = 1; d <= dim; d++) {
       const payment = inner.get(d) ?? null;
+      const isPreEnrollment = d < effectiveStart;
       const isFuture = isFutureMonth || (isCurrentMonth && d > todayD);
       const isToday = isCurrentMonth && d === todayD;
+
       if (payment) {
         presentDays++;
         totalBilled += payment.total_amount;
         totalPaid += payment.paid_amount;
       }
-      cells.push({ day: d, isFuture, isToday, payment });
+
+      // Days the student was actually enrolled AND that have already happened
+      if (!isPreEnrollment && !isFuture) possibleDays++;
+
+      cells.push({ day: d, isFuture, isToday, isPreEnrollment, payment });
     }
+
     return {
       student: s,
       cells,
       presentDays,
+      possibleDays,
       totalBilled,
       totalPaid,
       totalRemaining: Math.max(0, totalBilled - totalPaid),
@@ -116,7 +150,7 @@ export async function getMonthlyAttendance(opts: {
 
   const totalStudents = rows.length;
   const totalPresentDays = rows.reduce((s, r) => s + r.presentDays, 0);
-  const possibleDays = totalStudents * daysElapsed;
+  const possibleDays = rows.reduce((s, r) => s + r.possibleDays, 0);
   const totalAbsentDays = Math.max(0, possibleDays - totalPresentDays);
   const rate = possibleDays === 0 ? 0 : Math.round((totalPresentDays / possibleDays) * 100);
 
@@ -126,7 +160,7 @@ export async function getMonthlyAttendance(opts: {
 
   return {
     year, month, daysInMonth: dim, daysElapsed,
-    rows, totalStudents, totalPresentDays, totalAbsentDays, rate,
+    rows, totalStudents, totalPresentDays, totalAbsentDays, possibleDays, rate,
     grandBilled, grandPaid, grandRemaining,
   };
 }

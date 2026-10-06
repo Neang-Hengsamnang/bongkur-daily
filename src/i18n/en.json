@@ -265,6 +265,10 @@
   "attendance_col_unpaid": "Unpaid",
   "attendance_legend_sunday": "Sunday (no class)",
 
+  "attendance_legend_pre_enrollment": "Not enrolled yet",
+  "attendance_not_enrolled": "This student wasn't enrolled yet",
+  "attendance_legend_pre_enrollment_sunday": "Not enrolled · Sunday",
+
   "reports_title": "Reports",
   "reports_tab_overview": "Overview",
   "reports_tab_course": "By Course",
