@@ -199,6 +199,13 @@
   "payments_edit_error_duplicate": "វគ្គសិក្សានីមួយៗអាចបង្ហាញបានតែម្ដង",
   "payments_bulk_no_shared_course": "សិស្ស {{count}} នាក់ដែលបានជ្រើសមានវគ្គសិក្សាលំនាំដើមខុសៗគ្នា។ សូមជ្រើសវគ្គសិក្សាខាងក្រោមដើម្បីអនុវត្តលើពួកគេទាំងអស់។",
 
+  "payments_entry_update": "ធ្វើបច្ចុប្បន្នភាពការបង់ប្រាក់",
+  "payments_entry_updated": "បានធ្វើបច្ចុប្បន្នភាព",
+  "payments_entry_edit_items_title": "ធាតុថ្ងៃនេះ",
+  "payments_entry_editing_today": "កំពុងកែប្រែការបង់ប្រាក់ថ្ងៃនេះ — សរុប: {{total}} · បានបង់: {{paid}}",
+  "payments_entry_date_locked": "មិនអាចប្ដូរថ្ងៃខណៈកំពុងកែប្រែ",
+  "payments_entry_paid_so_far": "សរុបបានបង់ (រៀល)",
+
   "dashboard_subtitle": "ស្ថិតិសង្ខេបនៅក្នុងសាលារបស់អ្នក",
   "dashboard_kpi_students": "សិស្សសរុប",
   "dashboard_kpi_today": "ប្រមូលបានថ្ងៃនេះ",

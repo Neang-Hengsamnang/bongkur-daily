@@ -200,6 +200,13 @@
 
   "payments_bulk_no_shared_course": "The {{count}} selected students have different default courses. Pick the course(s) below to apply to all of them.",
 
+  "payments_entry_update": "Update Payment",
+  "payments_entry_updated": "Payment updated",
+  "payments_entry_edit_items_title": "Today's items",
+  "payments_entry_editing_today": "Editing today's payment — Total: {{total}} · Paid: {{paid}}",
+  "payments_entry_date_locked": "Date can't be changed while editing",
+  "payments_entry_paid_so_far": "Total paid (Riel)",
+
   "dashboard_subtitle": "Here is what is happening at your school",
   "dashboard_kpi_students": "Total Students",
   "dashboard_kpi_today": "Today's Collection",

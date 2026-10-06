@@ -4,7 +4,10 @@ import Modal from './ui/Modal';
 import { useToast } from './ui/Toast';
 import { useAuth } from '../context/AuthContext';
 import { riel } from '../lib/format';
-import { todayIso, upsertPayment, type PaymentWithItems } from '../lib/api/payments';
+import {
+  todayIso, upsertPayment, replacePaymentItems,
+  type PaymentWithItems,
+} from '../lib/api/payments';
 import type { Student } from '../lib/api/students';
 import type { Course } from '../lib/api/courses';
 
@@ -44,6 +47,8 @@ export default function PaymentEntryModal({
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  const isEditing = Boolean(existing);
+
   const activeCourses = useMemo(
     () => courses.filter((c) => c.status === 'active'),
     [courses],
@@ -57,22 +62,38 @@ export default function PaymentEntryModal({
 
   useEffect(() => {
     if (!open || !student) return;
-    const defaultCourse =
-      courses.find((c) => c.course_id === student.course && c.status === 'active')
-      ?? activeCourses[0];
 
-    setDate(defaultDate);
-    setItems(
-      defaultCourse
-        ? [{ key: nextKey(), course_id: defaultCourse.course_id, hours: 1 }]
-        : [],
-    );
-    setMode('full');
-    setPartialAmount(0);
-    setNote('');
+    if (existing && existing.payment_items.length > 0) {
+      // Edit mode: preload the existing line items into the cards
+      setItems(
+        existing.payment_items.map((it) => ({
+          key: nextKey(),
+          course_id: it.course_id,
+          hours: it.hours,
+        })),
+      );
+      setDate(existing.payment_date);
+      setNote(existing.note ?? '');
+      setPartialAmount(existing.paid_amount);
+      setMode('full');      // default to Pay Full when editing
+    } else {
+      // New payment: default course ×1
+      const defaultCourse =
+        courses.find((c) => c.course_id === student.course && c.status === 'active')
+        ?? activeCourses[0];
+      setItems(
+        defaultCourse
+          ? [{ key: nextKey(), course_id: defaultCourse.course_id, hours: 1 }]
+          : [],
+      );
+      setDate(defaultDate);
+      setNote('');
+      setPartialAmount(0);
+      setMode('full');
+    }
     setErr(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, student?.student_id, defaultDate]);
+  }, [open, student?.student_id, existing?.payment_id, defaultDate]);
 
   const previewTotal = useMemo(() => {
     let sum = 0;
@@ -83,17 +104,8 @@ export default function PaymentEntryModal({
     return sum;
   }, [items, courseMap]);
 
-  // Pre-computed map: existing hours per course (from today's paid record)
-  const existingHoursByCourse = useMemo(() => {
-    const m = new Map<string, number>();
-    if (!existing) return m;
-    for (const it of existing.payment_items) {
-      m.set(it.course_id, (m.get(it.course_id) ?? 0) + it.hours);
-    }
-    return m;
-  }, [existing]);
-
   const addCourse = (courseId: string) => {
+    if (items.some((i) => i.course_id === courseId)) return;
     setItems((prev) => [...prev, { key: nextKey(), course_id: courseId, hours: 1 }]);
   };
 
@@ -107,12 +119,8 @@ export default function PaymentEntryModal({
     setItems((prev) => {
       const next: DraftItem[] = [];
       for (const i of prev) {
-        if (i.course_id !== courseId) {
-          next.push(i);
-        } else if (i.hours > 1) {
-          next.push({ ...i, hours: i.hours - 1 });
-        }
-        // hours === 1 → drop the item (card returns to unselected)
+        if (i.course_id !== courseId) next.push(i);
+        else if (i.hours > 1) next.push({ ...i, hours: i.hours - 1 });
       }
       return next;
     });
@@ -127,29 +135,39 @@ export default function PaymentEntryModal({
       .map((i) => ({ course_id: i.course_id, hours: Math.round(i.hours) }));
 
     if (cleaned.length === 0) { setErr(t('payments_entry_error_no_items')); return; }
-    if (cleaned.some((i) => i.hours < 1)) { setErr(t('payments_entry_error_hours')); return; }
 
-    let paidAmount = 0;
-    if (mode === 'full') paidAmount = previewTotal;
+    let paidAmountToSave = 0;
+    if (mode === 'full') paidAmountToSave = previewTotal;
     else if (mode === 'partial') {
-      if (!Number.isFinite(partialAmount) || partialAmount <= 0) {
+      if (!Number.isFinite(partialAmount) || partialAmount < 0) {
         setErr(t('payments_entry_error_partial_amount'));
         return;
       }
-      paidAmount = Math.min(Math.round(partialAmount), previewTotal);
+      paidAmountToSave = Math.min(Math.round(partialAmount), previewTotal);
     }
+    // later = 0
 
     setSaving(true);
     try {
-      await upsertPayment({
-        student_id: student.student_id,
-        payment_date: date,
-        recorded_by: profile.user_id,
-        paid_amount: paidAmount,
-        note: note.trim() || null,
-        items: cleaned,
-      });
-      toast.success(t('payments_entry_saved'));
+      if (existing) {
+        await replacePaymentItems({
+          payment_id: existing.payment_id,
+          items: cleaned,
+          paid_amount: paidAmountToSave,
+          note: note.trim() || null,
+        });
+        toast.success(t('payments_entry_updated'));
+      } else {
+        await upsertPayment({
+          student_id: student.student_id,
+          payment_date: date,
+          recorded_by: profile.user_id,
+          paid_amount: paidAmountToSave,
+          note: note.trim() || null,
+          items: cleaned,
+        });
+        toast.success(t('payments_entry_saved'));
+      }
       onSaved();
     } catch (e) {
       setErr((e as Error).message);
@@ -183,33 +201,23 @@ export default function PaymentEntryModal({
             disabled={saving}
             className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
           >
-            {saving ? t('saving') : t('payments_entry_save')}
+            {saving
+              ? t('saving')
+              : isEditing
+                ? t('payments_entry_update')
+                : t('payments_entry_save')}
           </button>
         </>
       }
     >
       <div className="space-y-4">
-        {/* Existing payment banner */}
+        {/* Editing info bar */}
         {existing && (
-          <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-sm font-medium text-emerald-800">
-                ✓ {t('payments_entry_existing_title')}
-              </div>
-              <div className="shrink-0 text-xs text-emerald-700 tabular-nums">
-                {riel(existing.total_amount)} / {riel(existing.paid_amount)}
-              </div>
-            </div>
-            <ul className="mt-2 space-y-0.5 text-xs text-emerald-900">
-              {existing.payment_items.map((it) => (
-                <li key={it.item_id} className="flex justify-between gap-2 leading-relaxed">
-                  <span className="truncate">
-                    {it.course_name_at_time} · {it.hours}h × {riel(it.hourly_fee_at_time)}
-                  </span>
-                  <span className="shrink-0 tabular-nums">{riel(it.subtotal)}</span>
-                </li>
-              ))}
-            </ul>
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            {t('payments_entry_editing_today', {
+              total: riel(existing.total_amount),
+              paid: riel(existing.paid_amount),
+            })}
           </div>
         )}
 
@@ -217,7 +225,9 @@ export default function PaymentEntryModal({
         <div>
           <div className="mb-2 flex items-center justify-between">
             <label className="text-xs font-medium text-slate-600">
-              {t('payments_entry_new_items_title')}
+              {isEditing
+                ? t('payments_entry_edit_items_title')
+                : t('payments_entry_new_items_title')}
             </label>
             <span className="text-[10px] text-slate-400">
               {t('payments_entry_tap_to_add')}
@@ -233,9 +243,8 @@ export default function PaymentEntryModal({
               {activeCourses.map((c) => {
                 const draftItem = items.find((i) => i.course_id === c.course_id);
                 const isSelected = Boolean(draftItem);
-                const newHours = draftItem?.hours ?? 0;
-                const newSubtotal = c.hourly_fee * newHours;
-                const existingHrs = existingHoursByCourse.get(c.course_id) ?? 0;
+                const hours = draftItem?.hours ?? 0;
+                const subtotal = c.hourly_fee * hours;
 
                 return (
                   <div
@@ -248,22 +257,7 @@ export default function PaymentEntryModal({
                         : 'cursor-pointer border-slate-200 bg-white hover:border-brand-500 hover:shadow-sm active:scale-[0.98]')
                     }
                   >
-                    {/* Existing-paid badge */}
-                    {existingHrs > 0 && (
-                      <span
-                        className={
-                          'absolute right-1.5 top-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-medium leading-none ' +
-                          (isSelected
-                            ? 'bg-emerald-200 text-emerald-800'
-                            : 'bg-emerald-100 text-emerald-700')
-                        }
-                      >
-                        ✓ {existingHrs}h
-                      </span>
-                    )}
-
-                    {/* Course name */}
-                    <div className="mb-1.5 pb-0.5 pr-11 text-sm leading-relaxed text-slate-800 line-clamp-2">
+                    <div className="mb-1.5 pb-0.5 text-sm leading-relaxed text-slate-800 line-clamp-2">
                       {c.name_kh}
                     </div>
 
@@ -273,7 +267,6 @@ export default function PaymentEntryModal({
                       </div>
                     ) : (
                       <div className="mt-auto space-y-1.5">
-                        {/* Hours stepper */}
                         <div
                           className="flex items-center justify-between gap-1 rounded-md border border-emerald-200 bg-white p-0.5"
                           onClick={(e) => e.stopPropagation()}
@@ -287,7 +280,7 @@ export default function PaymentEntryModal({
                             −
                           </button>
                           <span className="min-w-[2ch] text-center text-sm font-semibold tabular-nums text-slate-800">
-                            {newHours}
+                            {hours}
                           </span>
                           <button
                             type="button"
@@ -298,10 +291,8 @@ export default function PaymentEntryModal({
                             +
                           </button>
                         </div>
-
-                        {/* Subtotal */}
                         <div className="text-right text-[11px] font-semibold text-emerald-800 tabular-nums">
-                          {riel(newSubtotal)}
+                          {riel(subtotal)}
                         </div>
                       </div>
                     )}
@@ -311,7 +302,6 @@ export default function PaymentEntryModal({
             </div>
           )}
 
-          {/* Total banner */}
           <div className="mt-3 flex items-center justify-between rounded-md bg-gradient-to-r from-brand-500 to-brand-700 px-4 py-2.5 text-white">
             <span className="text-xs uppercase tracking-wide opacity-90">
               {t('payments_entry_total')}
@@ -331,8 +321,14 @@ export default function PaymentEntryModal({
               value={date}
               max={todayIso()}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              disabled={isEditing}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-500"
             />
+            {isEditing && (
+              <p className="mt-1 text-[10px] text-slate-500">
+                {t('payments_entry_date_locked')}
+              </p>
+            )}
           </div>
 
           <div>
@@ -362,7 +358,7 @@ export default function PaymentEntryModal({
         {mode === 'partial' && (
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">
-              {t('payments_entry_partial_amount')}
+              {t('payments_entry_paid_so_far')}
             </label>
             <input
               type="number"
