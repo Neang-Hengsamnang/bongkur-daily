@@ -198,6 +198,8 @@
   "payments_edit_delete_confirm": "Delete this payment for {{name}} on {{date}}? This cannot be undone.",
   "payments_edit_error_duplicate": "Each course can only appear once",
 
+  "payments_bulk_no_shared_course": "The {{count}} selected students have different default courses. Pick the course(s) below to apply to all of them.",
+
   "dashboard_subtitle": "Here is what is happening at your school",
   "dashboard_kpi_students": "Total Students",
   "dashboard_kpi_today": "Today's Collection",

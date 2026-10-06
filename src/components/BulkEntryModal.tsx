@@ -55,9 +55,23 @@ export default function BulkEntryModal({
 
   useEffect(() => {
     if (!open) return;
-    const first = activeCourses[0];
+
+    // Preselect only when EVERY selected student shares the same default course,
+    // and that course is currently active.
+    let preselect: DraftItem[] = [];
+    if (students.length > 0) {
+      const sharedCourseIds = new Set(students.map((s) => s.course));
+      if (sharedCourseIds.size === 1) {
+        const sharedCourseId = [...sharedCourseIds][0];
+        const sharedCourse = activeCourses.find((c) => c.course_id === sharedCourseId);
+        if (sharedCourse) {
+          preselect = [{ key: nextKey(), course_id: sharedCourse.course_id, hours: 1 }];
+        }
+      }
+    }
+
     setDate(defaultDate);
-    setItems(first ? [{ key: nextKey(), course_id: first.course_id, hours: 1 }] : []);
+    setItems(preselect);
     setMode('full');
     setNote('');
     setErr(null);
@@ -189,6 +203,12 @@ export default function BulkEntryModal({
               {t('payments_entry_tap_to_add')}
             </span>
           </div>
+
+          {items.length === 0 && students.length > 0 && (
+            <p className="mb-2 rounded-md bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
+              {t('payments_bulk_no_shared_course', { count: students.length })}
+            </p>
+          )}
 
           {activeCourses.length === 0 ? (
             <div className="rounded-md border border-dashed border-slate-200 p-6 text-center text-xs text-slate-500">
