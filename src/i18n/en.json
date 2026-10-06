@@ -42,6 +42,7 @@
   "action_close": "Close",
   "action_refresh": "Refresh",
   "action_menu": "Menu",
+  "action_delete": "Delete",
 
   "login_subtitle": "Sign in to continue",
   "login_username": "Username",
@@ -187,6 +188,15 @@
   "payments_entry_tap_to_add": "Tap a course to add",
   "payments_entry_no_courses": "No active courses. Add one in the Courses page.",
   "payments_entry_existing_badge": "Already paid today",
+
+  "payments_edit_title": "Edit Payment",
+  "payments_edit_items_title": "Edit items",
+  "payments_edit_new_total": "New Total",
+  "payments_edit_paid_amount": "Amount Paid (Riel)",
+  "payments_edit_saved": "Payment updated",
+  "payments_edit_deleted": "Payment deleted",
+  "payments_edit_delete_confirm": "Delete this payment for {{name}} on {{date}}? This cannot be undone.",
+  "payments_edit_error_duplicate": "Each course can only appear once",
 
   "dashboard_subtitle": "Here is what is happening at your school",
   "dashboard_kpi_students": "Total Students",

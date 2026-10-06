@@ -42,6 +42,7 @@
   "action_close": "បិទ",
   "action_refresh": "ផ្ទុកឡើងវិញ",
   "action_menu": "ម៉ឺនុយ",
+  "action_delete": "លុប",
 
   "login_subtitle": "សូមចូលដើម្បីបន្ត",
   "login_username": "ឈ្មោះអ្នកប្រើប្រាស់",
@@ -187,6 +188,15 @@
   "payments_entry_tap_to_add": "ចុចវគ្គសិក្សាដើម្បីបន្ថែម",
   "payments_entry_no_courses": "គ្មានវគ្គសិក្សាសកម្មទេ។ សូមបន្ថែមនៅក្នុងទំព័រវគ្គសិក្សា។",
   "payments_entry_existing_badge": "បានបង់រួចថ្ងៃនេះ",
+  
+  "payments_edit_title": "កែប្រែការបង់ប្រាក់",
+  "payments_edit_items_title": "កែប្រែធាតុ",
+  "payments_edit_new_total": "សរុបថ្មី",
+  "payments_edit_paid_amount": "ចំនួនបានបង់ (រៀល)",
+  "payments_edit_saved": "បានកែប្រែការបង់ប្រាក់",
+  "payments_edit_deleted": "បានលុបការបង់ប្រាក់",
+  "payments_edit_delete_confirm": "លុបការបង់ប្រាក់របស់ {{name}} នៅ {{date}}? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។",
+  "payments_edit_error_duplicate": "វគ្គសិក្សានីមួយៗអាចបង្ហាញបានតែម្ដង",
 
   "dashboard_subtitle": "ស្ថិតិសង្ខេបនៅក្នុងសាលារបស់អ្នក",
   "dashboard_kpi_students": "សិស្សសរុប",

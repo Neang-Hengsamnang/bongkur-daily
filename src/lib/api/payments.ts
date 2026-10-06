@@ -151,3 +151,25 @@ export async function listPaymentsInRange(
   if (error) throw error;
   return (data ?? []) as PaymentWithItems[];
 }
+
+export async function replacePaymentItems(params: {
+  payment_id: string;
+  items: UpsertItem[];
+  paid_amount: number;
+  note: string | null;
+}): Promise<void> {
+  const { error } = await supabase.rpc('replace_payment_items', {
+    p_payment_id:  params.payment_id,
+    p_items:       params.items,
+    p_paid_amount: Math.max(0, Math.round(params.paid_amount)),
+    p_note:        params.note,
+  } as never);
+  if (error) throw new Error(error.message);
+}
+
+export async function deletePayment(payment_id: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_payment', {
+    p_payment_id: payment_id,
+  } as never);
+  if (error) throw new Error(error.message);
+}

@@ -7,6 +7,9 @@ import {
 } from '../../lib/api/payments';
 import PaymentDetailModal from '../../components/PaymentDetailModal';
 import RecordPaymentModal from '../../components/RecordPaymentModal';
+import PaymentEditModal from '../../components/PaymentEditModal';
+import { listCourses, type Course } from '../../lib/api/courses';
+import { useAuth } from '../../context/AuthContext';
 
 const PAGE_SIZE = 15;
 type StatusFilter = 'all' | 'paid' | 'partial' | 'unpaid';
@@ -28,6 +31,23 @@ export default function HistoryTab({ mode }: Props) {
 
   const [detailPayment, setDetailPayment] = useState<PaymentListItem | null>(null);
   const [recordTarget, setRecordTarget] = useState<PaymentListItem | null>(null);
+
+  const { profile } = useAuth();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [editTarget, setEditTarget] = useState<PaymentListItem | null>(null);
+
+  useEffect(() => {
+  let cancelled = false;
+  (async () => {
+    try {
+      const cs = await listCourses({ status: 'active' });
+      if (!cancelled) setCourses(cs);
+    } catch {
+      /* non-fatal */
+    }
+  })();
+  return () => { cancelled = true; };
+}, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -246,7 +266,24 @@ export default function HistoryTab({ mode }: Props) {
       <PaymentDetailModal
         open={!!detailPayment}
         payment={detailPayment}
+        canEdit={true}
+        onEdit={() => {
+          setEditTarget(detailPayment);
+          setDetailPayment(null);
+        }}
         onClose={() => setDetailPayment(null)}
+      />
+
+      <PaymentEditModal
+        open={!!editTarget}
+        payment={editTarget}
+        courses={courses}
+        canDelete={profile?.role === 'owner'}
+        onClose={() => setEditTarget(null)}
+        onSaved={() => {
+          setEditTarget(null);
+          reload();
+        }}
       />
 
       <RecordPaymentModal
