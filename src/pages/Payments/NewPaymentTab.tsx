@@ -223,11 +223,15 @@ export default function NewPaymentTab() {
                   />
                 </label>
 
-                <div className="flex items-start justify-between gap-1 pr-5">
+                <div className="flex items-start gap-1 pr-11">
                   <span className="text-sm font-medium text-slate-900 line-clamp-2">
                     {st.name_kh}
                   </span>
-                  {hasRecord && !isSelected && <span className="text-emerald-600">✓</span>}
+                  {hasRecord && !isSelected && (
+                    <span className="shrink-0 pt-0.5 text-emerald-600" aria-hidden="true">
+                      ✓
+                    </span>
+                  )}
                 </div>
                 <span className="mt-0.5 font-mono text-[10px] text-slate-500">
                   {st.student_id}
