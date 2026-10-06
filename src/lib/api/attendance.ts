@@ -71,24 +71,15 @@ export async function getMonthlyAttendance(opts: {
   const from = isoDateInMonth(year, month, 1);
   const to = isoDateInMonth(year, month, dim);
 
-  const [students, payments] = await Promise.all([
-    listStudents({ status: 'active', course: opts.course || undefined }),
+  // Fetch ALL students (regardless of current status). A student who was active
+  // during the queried month may have since been marked inactive/graduated.
+  // Excluding them would silently drop their revenue from the totals.
+  const [allStudents, payments] = await Promise.all([
+    listStudents({ status: 'all', course: opts.course || undefined }),
     listPaymentsInRange(from, to),
   ]);
 
-  // Exclude students created AFTER this month ends — they weren't enrolled.
-  // monthEnd is the last millisecond of the queried month.
-  const monthEndMs = new Date(year, month, 0, 23, 59, 59, 999).getTime();
-
-  const enrolledStudents = students.filter((s) => {
-    const createdMs = new Date(s.created_at).getTime();
-    return Number.isFinite(createdMs) && createdMs <= monthEndMs;
-  });
-
-  const filtered = opts.grade
-    ? enrolledStudents.filter((s) => s.grade === opts.grade)
-    : enrolledStudents;
-
+  // Group payments by student for fast lookup
   const byStudentDay = new Map<string, Map<number, PaymentWithItems>>();
   for (const p of payments) {
     const day = Number(p.payment_date.slice(8, 10));
@@ -96,6 +87,27 @@ export async function getMonthlyAttendance(opts: {
     inner.set(day, p);
     byStudentDay.set(p.student_id, inner);
   }
+
+  // Include a student when BOTH:
+  //   1. Their record existed by the end of the queried month (no future enrollments)
+  //   2. AND they are either currently active OR had ≥1 payment this month
+  // This preserves the "no phantom students" rule while ensuring every payment
+  // from a now-inactive student still counts toward the money KPIs.
+  const monthEndMs = new Date(year, month, 0, 23, 59, 59, 999).getTime();
+
+  const includedStudents = allStudents.filter((s) => {
+    const createdMs = new Date(s.created_at).getTime();
+    if (!Number.isFinite(createdMs) || createdMs > monthEndMs) return false;
+
+    const isActive = s.status === 'active';
+    const hasPaymentThisMonth = byStudentDay.has(s.student_id);
+
+    return isActive || hasPaymentThisMonth;
+  });
+
+  const filtered = opts.grade
+    ? includedStudents.filter((s) => s.grade === opts.grade)
+    : includedStudents;
 
   const rows: MonthlyRow[] = filtered.map((s) => {
     const inner = byStudentDay.get(s.student_id) ?? new Map<number, PaymentWithItems>();
