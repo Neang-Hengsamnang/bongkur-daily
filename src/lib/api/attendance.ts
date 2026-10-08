@@ -107,7 +107,7 @@ export async function getMonthlyAttendance(opts: {
 
   const filtered = opts.grade
     ? includedStudents.filter((s) => s.grade === opts.grade)
-    : includedStudents;
+    : includedStudents
 
   const rows: MonthlyRow[] = filtered.map((s) => {
     const inner = byStudentDay.get(s.student_id) ?? new Map<number, PaymentWithItems>();
